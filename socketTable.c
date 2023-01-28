@@ -4,23 +4,12 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <wait.h>
+#include <string.h>
 //#include "linked_list.h"
+#include "socketTable.h"
 
-typedef struct clientSock {
-    clientSock next;
-    int socketNum;
-    char handleName[100];
-    uint8_t handleLength;
-    int validFlag;
-    int connectionFlag;
-} clientSock;
 
-typedef struct sockTable {
-    clientSock tail;
-    int tableLength; //num items
-} sockTable;
-
-sockTable *newSockTable() {
+struct sockTable *newSockTable() {
     sockTable *st = malloc(sizeof(sockTable));
     st->tableLength = 0;
     return st;
@@ -30,6 +19,7 @@ clientSock *newClientSock() {
     clientSock *cs = malloc(sizeof(clientSock));
     cs->socketNum = 0;
     //cs->handleName = malloc(sizeof(char *));
+    return cs;
 }
 
 void setupSock(clientSock *cs, int socketNum, char *handleName) {
@@ -40,7 +30,7 @@ void setupSock(clientSock *cs, int socketNum, char *handleName) {
 
 void addClientToSockTable(sockTable *st, int socketNum, char *handleName) {
     clientSock *cs = newClientSock();
-    setupSock(cs);
+    setupSock(cs, socketNum, handleName);
     
     if(st->tableLength == 0) {
         st->tail = cs;
@@ -57,7 +47,7 @@ void removeClientSock(sockTable *st, int socketNum){
     clientSock *prev = st->tail;
     if(prev->socketNum == socketNum){
         st->tail = prev->next;
-        st->length--;
+        st->tableLength--;
         freeClientSock(prev);
     }
 
@@ -78,17 +68,29 @@ void freeSockTable(sockTable *st){
         return;
     }
     clientSock *curr = st->tail;
+    int len = st->tableLength;
 
-    for(int i = 0; i < st->tableLength; i++){
+    for(int i = 0; i < len; i++){
         clientSock *next = curr->next;
         freeClientSock(curr);
         curr = next;
     }
-    freeClientSock(curr);
+    //freeClientSock(curr);
     free(st);
 }
 
 void freeClientSock(clientSock *cs) {
     //free(cs->handleName);
     free(cs);
+}
+
+void printSocks(sockTable * st){
+    clientSock *curr = st->tail;
+    int len = st->tableLength;
+
+    for(int i = 0; i < len; i++){
+        clientSock *next = curr->next;
+        printf("%d: Header name: %s, header length: %d\n",curr->socketNum, curr->handleName, curr->handleLength);
+        curr = next;
+    }
 }
