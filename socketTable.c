@@ -9,7 +9,7 @@
 #include "socketTable.h"
 
 
-struct sockTable *newSockTable() {
+sockTable *newSockTable() {
     sockTable *st = malloc(sizeof(sockTable));
     st->tableLength = 0;
     return st;
@@ -93,4 +93,120 @@ void printSocks(sockTable * st){
         printf("%d: Header name: %s, header length: %d\n",curr->socketNum, curr->handleName, curr->handleLength);
         curr = next;
     }
+}
+
+clientSock *lookupClientHandle(sockTable *st, char *handleName) {
+    clientSock *curr = st->tail;
+    int len = st->tableLength;
+
+    for(int i = 0; i < len; i++){
+        clientSock *next = curr->next;
+        if (strcmp(curr->handleName, handleName) == 0) {
+            return curr;
+        }
+        curr = next;
+    }
+    //handle name is not in sockTable
+    return NULL;
+}
+
+clientSock *lookupClientSocket(sockTable *st, int socketNum) {
+    clientSock *curr = st->tail;
+    int len = st->tableLength;
+
+    for(int i = 0; i < len; i++){
+        clientSock *next = curr->next;
+        if (curr->socketNum == socketNum) {
+            return curr;
+        }
+        curr = next;
+    }
+    //handle name is not in sockTable
+    return NULL;
+}
+
+///client Buff needs to be freed outside of function!////
+
+char **listClientHandles(sockTable *st) {
+    char **clientBuff = malloc(sizeof(char *) * st->tableLength);
+    clientSock *curr = st->tail;
+    int len = st->tableLength;
+
+    for(int i = 0; i < len; i++){
+        clientSock *next = curr->next;
+        clientBuff[i] = curr->handleName;
+        curr = next;
+    }
+    return clientBuff;
+}
+
+char **checkValidHandles(sockTable *st, char *handleList[], int numHandles) {
+    char **invalidClientBuff = malloc(sizeof(char *) * st->tableLength);
+    int invalidHandles = 0;
+
+    for(int i = 0; i < numHandles; i++) {
+        if ((lookupClientHandle(st, handleList[i])) == NULL) {
+            invalidClientBuff[invalidHandles] = handleList[i];
+            invalidHandles++;
+        }
+    }
+    return invalidClientBuff;
+}
+
+
+
+int checkValidity(sockTable *st, int socketNum) {
+    clientSock *cs = lookupClientSocket(st, socketNum);
+    return cs->validFlag;
+}
+
+void setValidity(sockTable *st, int socketNum, int validNum) {
+    // 0 is valid 1 is not
+    if (validNum != 0 || validNum != 1) {
+        validNum = 1; // can't set to other than 0/1 therefore 1 is default in this case
+    }
+    clientSock *cs = lookupClientSocket(st, socketNum);
+    cs->validFlag = validNum;
+}
+
+int checkConnection(sockTable *st, int socketNum) {
+    clientSock *cs = lookupClientSocket(st, socketNum);
+    return cs->connectionFlag;
+}
+
+void setConnection(sockTable *st, int socketNum, int connNum) {
+    // 0 is valid 1 is not
+    if (connNum != 0 || connNum != 1) {
+        connNum = 1; // can't set to other than 0/1 therefore 1 is default in this case
+    }
+    clientSock *cs = lookupClientSocket(st, socketNum);
+    cs->connectionFlag = connNum;
+}
+
+int getTableLength(sockTable *st) {
+    return st->tableLength;
+}
+
+int getHandleLength(sockTable *st, int socketNum) {
+    clientSock *cs = lookupClientSocket(st, socketNum);
+    return cs->handleLength;
+}
+
+int getSocketNum(sockTable *st, char *handleName) {
+    clientSock *cs = lookupClientHandle(st, handleName);
+    return cs->socketNum;
+}
+char* getHandleName(sockTable *st, int socketNum){  
+    clientSock *curr = st->tail;
+    int len = st->tableLength;
+
+    for(int i = 0; i < len; i++){
+        clientSock *next = curr->next;
+        if (curr->socketNum == socketNum) {
+            return curr->handleName;
+        }
+        curr = next;
+    }
+    //handle name is not in sockTable
+    return "-1";
 }

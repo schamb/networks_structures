@@ -17,13 +17,26 @@ typedef struct sockTable {
     int tableLength; //num items
 } sockTable;
 
-sockTable *newSockTable();
+struct sockTable *newSockTable();
 struct clientSock *newClientSock();
 void setupSock(struct clientSock *cs, int socketNum, char *handleName);
 void addClientToSockTable(sockTable *st, int socketNum, char *handleName);
 void removeClientSock(sockTable *st, int socketNum);
 void freeSockTable(sockTable *st);
 void freeClientSock(struct clientSock *cs);
-void printSocks(sockTable * st);
+void printSocks(sockTable *st);
+clientSock *lookupClientSocket(sockTable *st, int socketNum);
+clientSock *lookupClientHandle(sockTable *st, char *handleName);
+char **listClientHandles(sockTable *st);
+char **checkValidHandles(sockTable *st, char **handleList, int numHandles);
+int checkValidity(sockTable *st, int socketNum);
+void setValidity(sockTable *st, int socketNum, int validNum);
+int checkConnection(sockTable *st, int socketNum);
+void setConnection(sockTable *st, int socketNum, int connNum);
+int getTableLength(sockTable *st);
+int getHandleLength(sockTable *st, int socketNum);
+int getSocketNum(sockTable *st, char *handleName);
+char* getHandleName(sockTable *st, int socketNum);
+
 
 #endif
